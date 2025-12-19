@@ -1,0 +1,54 @@
+#!/usr/bin/env python3
+import os
+import subprocess
+
+# Cowrie TTY directory
+TTY_DIR = "/srv/cowrie/var/lib/cowrie/tty"
+
+# Zabbix settings
+ZABBIX_SERVER = "Change Me"
+HOSTNAME = "Change Me"
+
+# Zabbix trapper item keys
+ITEM_BUSYBOX = "honeypot.busybox"
+ITEM_PASSCHANGE = "honeypot.passchange"
+
+def send_to_zabbix(key, message):
+    subprocess.run([
+        "zabbix_sender",
+        "-z", ZABBIX_SERVER,
+        "-s", HOSTNAME,
+        "-k", key,
+        "-o", message
+    ])
+
+def get_latest_tty_file():
+    files = [
+        os.path.join(TTY_DIR, f)
+        for f in os.listdir(TTY_DIR)
+        if os.path.isfile(os.path.join(TTY_DIR, f))
+    ]
+    if not files:
+        return None
+
+    files.sort(key=lambda x: os.path.getmtime(x), reverse=True)
+    return files[0]
+
+def check_latest_attack():
+    latest_file = get_latest_tty_file()
+    if not latest_file:
+        return
+
+    with open(latest_file, "r", errors="ignore") as f:
+        content = f.read().lower()
+
+    # Detect busybox attack
+    if "busybox" in content:
+        send_to_zabbix(ITEM_BUSYBOX, "busybox attack")
+
+    # Detect password-change attack
+    if 'echo "root:' in content and '|chpasswd' in content:
+        send_to_zabbix(ITEM_PASSCHANGE, "password change attack")
+
+if __name__ == "__main__":
+    check_latest_attack()
