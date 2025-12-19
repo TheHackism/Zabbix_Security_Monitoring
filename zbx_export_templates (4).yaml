@@ -5,19 +5,49 @@ zabbix_export:
       name: 'Honey Pot'
   templates:
     - uuid: 24da69d7b1fa486daa15431c535f4438
-      template: 'Honey Pot'
-      name: 'Honey Pot'
+      template: HoneyPot
+      name: HoneyPot
       groups:
         - name: 'Honey Pot'
       items:
+        - uuid: 15ce4efceb5c45ad9e9657a30236f733
+          name: 'Honeypot BusyBox'
+          type: TRAP
+          key: honeypot.alert
+          value_type: TEXT
+          triggers:
+            - uuid: 2b65ea084be3492dbd02754746db1ff3
+              expression: 'find(/HoneyPot/honeypot.alert,,"like","busybox attack")=1'
+              name: 'busybox attack'
+              priority: WARNING
+        - uuid: 0d083f82a7e94c81875505fe26f620ea
+          name: 'Password change attack'
+          type: TRAP
+          key: honeypot.passchange
+          value_type: TEXT
+          triggers:
+            - uuid: fdd5d6a611a9485582c0119d53b925c7
+              expression: 'find(/HoneyPot/honeypot.passchange,,"like","password change attack")=1'
+              name: 'Password Change Attack'
+              priority: WARNING
+        - uuid: 0b639100ccee44fb81f9769938c07a1b
+          name: 'Honeypot Unknown Attack'
+          type: TRAP
+          key: honeypot.unknown
+          value_type: TEXT
+          triggers:
+            - uuid: ee39d49dd7184fa386d3f96c2f289f56
+              expression: 'find(/HoneyPot/honeypot.unknown,,"like","unknown attack")=1'
+              name: 'busybox attack'
+              priority: WARNING
         - uuid: b1a47efc72e94da7a98d02926d207ee0
           name: 'TTY Attack'
           type: SSH
           key: 'ssh.run[tty.attempt,{HOST.IP},12222]'
           value_type: CHAR
           params: 'ls -latr /srv/cowrie/var/lib/cowrie/tty'
-          username: 
-          password: 
+          username: hackism
+          password: 'add your password here' 
           preprocessing:
             - type: JAVASCRIPT
               parameters:
@@ -55,7 +85,7 @@ zabbix_export:
           timeout: 30s
           triggers:
             - uuid: ad29c840768544a0b4a7560ffc042f4c
-              expression: 'change(/Honey Pot/ssh.run[tty.attempt,{HOST.IP},12222])<>0'
+              expression: 'change(/HoneyPot/ssh.run[tty.attempt,{HOST.IP},12222])<>0'
               recovery_mode: NONE
               name: 'tty attack alert'
               priority: HIGH
