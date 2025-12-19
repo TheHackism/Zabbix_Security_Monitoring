@@ -1,0 +1,11 @@
+[Unit]
+Description=Watch Cowrie TTY directory for new attacks
+After=network.target
+
+[Service]
+ExecStart=/opt/honeypot/watch_tty.sh
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target
