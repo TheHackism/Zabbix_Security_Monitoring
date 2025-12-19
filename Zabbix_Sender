@@ -6,12 +6,13 @@ import subprocess
 TTY_DIR = "/srv/cowrie/var/lib/cowrie/tty"
 
 # Zabbix settings
-ZABBIX_SERVER = "Change Me"
-HOSTNAME = "Change Me"
+ZABBIX_SERVER = "changeme"
+HOSTNAME = "changeme"
 
 # Zabbix trapper item keys
-ITEM_BUSYBOX = "honeypot.busybox"
+ITEM_ALERT = "honeypot.alert"
 ITEM_PASSCHANGE = "honeypot.passchange"
+ITEM_UNKNOWN = "honeypot.unknown"
 
 def send_to_zabbix(key, message):
     subprocess.run([
@@ -44,11 +45,15 @@ def check_latest_attack():
 
     # Detect busybox attack
     if "busybox" in content:
-        send_to_zabbix(ITEM_BUSYBOX, "busybox attack")
+        send_to_zabbix(ITEM_ALERT, "busybox attack")
 
     # Detect password-change attack
-    if 'echo "root:' in content and '|chpasswd' in content:
+    elif 'echo "root:' in content and '|chpasswd' in content:
         send_to_zabbix(ITEM_PASSCHANGE, "password change attack")
+
+    # Unknown attack type
+    else:
+        send_to_zabbix(ITEM_UNKNOWN, "unknown attack")
 
 if __name__ == "__main__":
     check_latest_attack()
